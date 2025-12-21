@@ -1,69 +1,58 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'login_screen.dart';
-
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
-
-  Future<void> logout(BuildContext context) async {
-    await FirebaseAuth.instance.signOut();
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Admin Dashboard"),
+        title: const Text('Admin Dashboard'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => logout(context),
+            tooltip: 'Logout',
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+            },
           ),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            const SizedBox(height: 20),
+
+            /// MY HOSTELS CARD
             _DashboardCard(
-              icon: Icons.apartment,
-              title: "Hostel Details",
+              icon: Icons.apartment_rounded,
+              title: 'My Hostels',
+              subtitle: 'Create and manage PG / Hostels',
               onTap: () {
-                // ✅ OPEN CREATE HOSTEL SCREEN USING NAMED ROUTE
-                Navigator.pushNamed(context, '/create-hostel');
+                Navigator.pushNamed(context, '/my-hostels');
               },
             ),
+
+            const SizedBox(height: 20),
+
+            /// PROFILE CARD (NEW)
             _DashboardCard(
-              icon: Icons.meeting_room,
-              title: "Rooms & Beds",
-              onTap: () {},
+              icon: Icons.person_outline,
+              title: 'Profile',
+              subtitle: 'View and edit your profile',
+              onTap: () {
+                Navigator.pushNamed(context, '/profile');
+              },
             ),
-            _DashboardCard(
-              icon: Icons.people,
-              title: "Residents",
-              onTap: () {},
-            ),
-            _DashboardCard(icon: Icons.payments, title: "Fees", onTap: () {}),
-            _DashboardCard(
-              icon: Icons.build,
-              title: "Complaints",
-              onTap: () {},
-            ),
-            _DashboardCard(
-              icon: Icons.notifications,
-              title: "Notices",
-              onTap: () {},
-            ),
+
+            const SizedBox(height: 20),
+
+            /// FUTURE MODULE PLACEHOLDER
+            _ComingSoonCard(),
           ],
         ),
       ),
@@ -71,34 +60,93 @@ class AdminDashboard extends StatelessWidget {
   }
 }
 
+/// ---------------------------
+/// DASHBOARD CARD WIDGET
+/// ---------------------------
 class _DashboardCard extends StatelessWidget {
   final IconData icon;
   final String title;
+  final String subtitle;
   final VoidCallback onTap;
 
   const _DashboardCard({
     required this.icon,
     required this.title,
+    required this.subtitle,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(16),
+      onTap: onTap,
+      child: Card(
+        elevation: 3,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 22),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  size: 30,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      subtitle,
+                      style: TextStyle(color: Colors.grey.shade600),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios, size: 16),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// ---------------------------
+/// COMING SOON CARD
+/// ---------------------------
+class _ComingSoonCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return Card(
-      elevation: 3,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onTap,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
           children: [
-            Icon(icon, size: 40, color: Theme.of(context).primaryColor),
-            const SizedBox(height: 12),
+            Icon(Icons.lock_outline, color: Colors.grey.shade400),
+            const SizedBox(width: 16),
             Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
+              'More modules coming soon',
+              style: TextStyle(color: Colors.grey.shade500),
             ),
           ],
         ),

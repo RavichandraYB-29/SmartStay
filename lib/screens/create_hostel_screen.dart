@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CreateHostelScreen extends StatefulWidget {
   const CreateHostelScreen({super.key});
@@ -10,125 +10,135 @@ class CreateHostelScreen extends StatefulWidget {
 }
 
 class _CreateHostelScreenState extends State<CreateHostelScreen> {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController addressController = TextEditingController();
-  final TextEditingController rulesController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+  final TextEditingController _rulesController = TextEditingController();
 
   bool isLoading = false;
 
   @override
   void dispose() {
-    nameController.dispose();
-    addressController.dispose();
-    rulesController.dispose();
+    _nameController.dispose();
+    _addressController.dispose();
+    _rulesController.dispose();
     super.dispose();
   }
 
-  Future<void> saveHostel() async {
-    final name = nameController.text.trim();
-    final address = addressController.text.trim();
-    final rules = rulesController.text.trim();
-
-    if (name.isEmpty || address.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Hostel name and address are required")),
-      );
-      return;
-    }
+  Future<void> _saveHostel() async {
+    if (!_formKey.currentState!.validate()) return;
 
     setState(() => isLoading = true);
 
     try {
       final user = FirebaseAuth.instance.currentUser;
+
       if (user == null) {
-        throw Exception("User not logged in");
+        throw Exception('User not logged in');
       }
 
       await FirebaseFirestore.instance.collection('hostels').add({
-        'name': name,
-        'address': address,
-        'rules': rules,
+        'name': _nameController.text.trim(),
+        'address': _addressController.text.trim(),
+        'rules': _rulesController.text.trim(),
         'ownerId': user.uid,
         'createdAt': Timestamp.now(),
       });
 
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Hostel created successfully")),
-      );
-
-      // ✅ Go back to Admin Dashboard
-      Navigator.pop(context);
+      // SUCCESS → Go to My Hostels
+      Navigator.pushReplacementNamed(context, '/my-hostels');
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text("Error: ${e.toString()}")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            e.toString(),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      );
     } finally {
-      if (mounted) setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Create Hostel / PG")),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: SingleChildScrollView(
+      appBar: AppBar(title: const Text('Create Hostel')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Form(
+          key: _formKey,
           child: Column(
             children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(
-                  labelText: "Hostel / PG Name",
-                  border: OutlineInputBorder(),
-                ),
+              _buildTextField(
+                controller: _nameController,
+                label: 'Hostel / PG Name',
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'Hostel name is required'
+                    : null,
               ),
               const SizedBox(height: 16),
-
-              TextField(
-                controller: addressController,
+              _buildTextField(
+                controller: _addressController,
+                label: 'Address',
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'Address is required'
+                    : null,
+              ),
+              const SizedBox(height: 16),
+              _buildTextField(
+                controller: _rulesController,
+                label: 'Rules (Optional)',
                 maxLines: 3,
-                decoration: const InputDecoration(
-                  labelText: "Address",
-                  border: OutlineInputBorder(),
-                ),
               ),
-              const SizedBox(height: 16),
-
-              TextField(
-                controller: rulesController,
-                maxLines: 4,
-                decoration: const InputDecoration(
-                  labelText: "Rules (optional)",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 30),
 
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: 52,
                 child: ElevatedButton(
-                  onPressed: isLoading ? null : saveHostel,
+                  onPressed: isLoading ? null : _saveHostel,
                   child: isLoading
                       ? const SizedBox(
-                          height: 22,
                           width: 22,
+                          height: 22,
                           child: CircularProgressIndicator(
-                            strokeWidth: 2,
+                            strokeWidth: 2.5,
                             color: Colors.white,
                           ),
                         )
-                      : const Text("Save Hostel"),
+                      : const Text(
+                          'Save Hostel',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    String? Function(String?)? validator,
+    int maxLines = 1,
+  }) {
+    return TextFormField(
+      controller: controller,
+      validator: validator,
+      maxLines: maxLines,
+      decoration: InputDecoration(labelText: label),
     );
   }
 }
