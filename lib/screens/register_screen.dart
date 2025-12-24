@@ -29,6 +29,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             password: passwordController.text.trim(),
           );
 
+      /// ✅ CREATE USER DOCUMENT WITH DEFAULT FIELDS
       await FirebaseFirestore.instance
           .collection('users')
           .doc(credential.user!.uid)
@@ -36,6 +37,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
             'name': nameController.text.trim(),
             'email': emailController.text.trim(),
             'role': role,
+            'active': true, // ✅ required by Firestore rules
+            'stayStatus':
+                role ==
+                    'resident' // ✅ prevents dashboard crash
+                ? 'pending'
+                : null,
             'createdAt': Timestamp.now(),
           });
 

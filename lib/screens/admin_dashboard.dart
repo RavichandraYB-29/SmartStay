@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'assign_room_screen.dart'; // ✅ ADD THIS
+
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
 
@@ -39,7 +41,22 @@ class AdminDashboard extends StatelessWidget {
 
             const SizedBox(height: 20),
 
-            /// PROFILE CARD (NEW)
+            /// ASSIGN ROOM CARD (MODULE 2)
+            _DashboardCard(
+              icon: Icons.meeting_room_outlined,
+              title: 'Assign Room',
+              subtitle: 'Allocate residents to rooms',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const AssignRoomScreen()),
+                );
+              },
+            ),
+
+            const SizedBox(height: 20),
+
+            /// PROFILE CARD
             _DashboardCard(
               icon: Icons.person_outline,
               title: 'Profile',

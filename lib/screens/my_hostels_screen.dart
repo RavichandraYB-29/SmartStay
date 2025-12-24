@@ -33,34 +33,8 @@ class MyHostelsScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          // EMPTY STATE
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: const [
-                  Icon(
-                    Icons.home_work_outlined,
-                    size: 64,
-                    color: Color(0xFFA5A1FF),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'No Hostels Yet',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Color(0xFF2E2E3A),
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Tap + to add your first PG or Hostel',
-                    style: TextStyle(color: Color(0xFF6B6B7A)),
-                  ),
-                ],
-              ),
-            );
+            return const Center(child: Text('No Hostels Yet'));
           }
 
           return ListView(
@@ -73,39 +47,39 @@ class MyHostelsScreen extends StatelessWidget {
                   vertical: 10,
                 ),
                 child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 14,
-                  ),
-                  leading: const Icon(
-                    Icons.apartment,
-                    color: Color(0xFF6C63FF),
-                  ),
+                  contentPadding: const EdgeInsets.all(16),
                   title: Text(
                     data['name'],
                     style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  subtitle: Text(
-                    data['address'] ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  trailing: PopupMenuButton<String>(
-                    onSelected: (value) {
-                      if (value == 'edit') {
-                        _showEditHostelDialog(context, doc.id, data);
-                      } else if (value == 'delete') {
-                        _deleteHostel(context, doc.id);
-                      }
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'edit', child: Text('Edit')),
-                      PopupMenuItem(value: 'delete', child: Text('Delete')),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (data['address'] != null &&
+                          data['address'].toString().isNotEmpty)
+                        Text(
+                          data['address'],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      const SizedBox(height: 4),
+                      if (data['rules'] != null &&
+                          data['rules'].toString().isNotEmpty)
+                        Text(
+                          data['rules'],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
                     ],
                   ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -124,89 +98,5 @@ class MyHostelsScreen extends StatelessWidget {
         },
       ),
     );
-  }
-
-  // ---------------- EDIT HOSTEL ----------------
-  void _showEditHostelDialog(
-    BuildContext context,
-    String hostelId,
-    Map<String, dynamic> data,
-  ) {
-    final nameController = TextEditingController(text: data['name']);
-    final addressController = TextEditingController(text: data['address']);
-    final rulesController = TextEditingController(text: data['rules']);
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Edit Hostel'),
-        content: SingleChildScrollView(
-          child: Column(
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Hostel Name'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: addressController,
-                decoration: const InputDecoration(labelText: 'Address'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: rulesController,
-                maxLines: 3,
-                decoration: const InputDecoration(labelText: 'Rules'),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            child: const Text('Save'),
-            onPressed: () async {
-              await FirebaseFirestore.instance
-                  .collection('hostels')
-                  .doc(hostelId)
-                  .update({
-                    'name': nameController.text.trim(),
-                    'address': addressController.text.trim(),
-                    'rules': rulesController.text.trim(),
-                  });
-
-              Navigator.pop(context);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ---------------- DELETE HOSTEL ----------------
-  Future<void> _deleteHostel(BuildContext context, String hostelId) async {
-    final floorsSnapshot = await FirebaseFirestore.instance
-        .collection('hostels')
-        .doc(hostelId)
-        .collection('floors')
-        .limit(1)
-        .get();
-
-    if (floorsSnapshot.docs.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Cannot delete hostel with existing floors'),
-        ),
-      );
-      return;
-    }
-
-    await FirebaseFirestore.instance
-        .collection('hostels')
-        .doc(hostelId)
-        .delete();
   }
 }

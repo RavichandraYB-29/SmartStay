@@ -1,66 +1,176 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
-import 'login_screen.dart';
 
 class ResidentDashboard extends StatelessWidget {
   const ResidentDashboard({super.key});
 
-  Future<void> logout(BuildContext context) async {
-    await FirebaseAuth.instance.signOut();
-
-    Navigator.pushAndRemoveUntil(
-      context,
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-      (route) => false,
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final String userId = FirebaseAuth.instance.currentUser!.uid;
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Resident Dashboard"),
+        title: const Text('Resident Dashboard'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
-            onPressed: () => logout(context),
+            onPressed: () async {
+              await FirebaseAuth.instance.signOut();
+              Navigator.pushNamedAndRemoveUntil(context, '/', (_) => false);
+            },
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ListView(
-          children: const [
-            _ResidentCard(icon: Icons.bed, title: "My Room Details"),
-            _ResidentCard(icon: Icons.payments, title: "My Fees"),
-            _ResidentCard(icon: Icons.build, title: "Raise Complaint"),
-            _ResidentCard(icon: Icons.history, title: "Complaint History"),
-            _ResidentCard(icon: Icons.notifications, title: "Notices"),
-          ],
-        ),
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final data = snapshot.data!.data() as Map<String, dynamic>?;
+
+          /// ================= NOT ASSIGNED =================
+          if (data == null || data['stayStatus'] != 'active') {
+            return const Center(
+              child: Text(
+                'Room not yet assigned.\nPlease contact admin.',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18),
+              ),
+            );
+          }
+
+          /// ================= ASSIGNED =================
+          final String hostelId = data['assignedHostelId'];
+          final String floorId = data['assignedFloorId'];
+          final String roomId = data['assignedRoomId'];
+          final Timestamp checkInDate = data['checkInDate'];
+
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _infoCard(
+                  title: 'Stay Status',
+                  value: 'Active',
+                  icon: Icons.verified,
+                ),
+
+                const SizedBox(height: 10),
+
+                _infoCard(
+                  title: 'Check-in Date',
+                  value: checkInDate.toDate().toLocal().toString().split(
+                    ' ',
+                  )[0],
+                  icon: Icons.calendar_today,
+                ),
+
+                const SizedBox(height: 20),
+
+                /// ================= HOSTEL =================
+                StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('hostels')
+                      .doc(hostelId)
+                      .snapshots(),
+                  builder: (context, hostelSnap) {
+                    if (!hostelSnap.hasData) {
+                      return const CircularProgressIndicator();
+                    }
+
+                    final hostel =
+                        hostelSnap.data!.data() as Map<String, dynamic>;
+
+                    return _infoCard(
+                      title: 'Hostel',
+                      value: hostel['name'],
+                      icon: Icons.apartment,
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 10),
+
+                /// ================= FLOOR =================
+                StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('hostels')
+                      .doc(hostelId)
+                      .collection('floors')
+                      .doc(floorId)
+                      .snapshots(),
+                  builder: (context, floorSnap) {
+                    if (!floorSnap.hasData) {
+                      return const CircularProgressIndicator();
+                    }
+
+                    final floor =
+                        floorSnap.data!.data() as Map<String, dynamic>;
+
+                    return _infoCard(
+                      title: 'Floor',
+                      value: floor['name'],
+                      icon: Icons.layers,
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 10),
+
+                /// ================= ROOM =================
+                StreamBuilder<DocumentSnapshot>(
+                  stream: FirebaseFirestore.instance
+                      .collection('hostels')
+                      .doc(hostelId)
+                      .collection('floors')
+                      .doc(floorId)
+                      .collection('rooms')
+                      .doc(roomId)
+                      .snapshots(),
+                  builder: (context, roomSnap) {
+                    if (!roomSnap.hasData) {
+                      return const CircularProgressIndicator();
+                    }
+
+                    final room = roomSnap.data!.data() as Map<String, dynamic>;
+
+                    return _infoCard(
+                      title: 'Room',
+                      value: 'Room ${room['roomNumber']}',
+                      icon: Icons.meeting_room,
+                    );
+                  },
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }
-}
 
-class _ResidentCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-
-  const _ResidentCard({required this.icon, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
+  /// ================= REUSABLE CARD =================
+  Widget _infoCard({
+    required String title,
+    required String value,
+    required IconData icon,
+  }) {
     return Card(
       elevation: 2,
-      margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        leading: Icon(icon, color: Theme.of(context).primaryColor),
+        leading: Icon(icon),
         title: Text(title),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-        onTap: () {},
+        subtitle: Text(
+          value,
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
       ),
     );
   }
