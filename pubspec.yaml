@@ -11,24 +11,23 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # UI & Icons
   cupertino_icons: ^1.0.8
   google_fonts: ^6.1.0
 
-  # 🔥 Firebase Core
+  # Firebase
   firebase_core: ^3.6.0
-
-  # 🔐 Authentication
   firebase_auth: ^5.3.1
-
-  # 🗄️ Firestore Database
   cloud_firestore: ^5.4.0
+
+  # Local storage
+  shared_preferences: ^2.2.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/images/

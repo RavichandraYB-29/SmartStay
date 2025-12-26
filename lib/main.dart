@@ -5,6 +5,7 @@ import 'firebase_options.dart';
 import 'theme.dart';
 
 // Screens
+import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/admin_dashboard.dart';
 import 'screens/my_hostels_screen.dart';
@@ -23,11 +24,14 @@ class SmartStayApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
       title: 'SmartStay',
+      theme: AppTheme.lightTheme,
+
+      /// 🔹 Start with Splash Screen
       initialRoute: '/',
       routes: {
-        '/': (context) => const LoginScreen(),
+        '/': (context) => const SplashScreen(),
+        '/login': (context) => const LoginScreen(),
         '/admin-dashboard': (context) => const AdminDashboard(),
         '/my-hostels': (context) => const MyHostelsScreen(),
         '/create-hostel': (context) => const CreateHostelScreen(),
