@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'hostel_management_screen.dart'; // ✅ ADD THIS IMPORT
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -90,7 +91,7 @@ class _TopHeader extends StatelessWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// STATS ROW (OVERFLOW FIXED)
+/// STATS ROW (UNCHANGED)
 ////////////////////////////////////////////////////////////////////////////////
 
 class _StatsRow extends StatelessWidget {
@@ -173,24 +174,25 @@ class _StatsRow extends StatelessWidget {
               const SizedBox(height: 6),
               Text(title, style: const TextStyle(color: Colors.grey)),
               const SizedBox(height: 8),
-              if (showBar)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(6),
-                  child: LinearProgressIndicator(
-                    value: 0.88,
-                    minHeight: 6,
-                    backgroundColor: Colors.grey.shade200,
-                    valueColor: const AlwaysStoppedAnimation(Color(0xFF6C3BFF)),
-                  ),
-                )
-              else
-                Text(
-                  sub,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF6C3BFF),
-                  ),
-                ),
+              showBar
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: LinearProgressIndicator(
+                        value: 0.88,
+                        minHeight: 6,
+                        backgroundColor: Colors.grey.shade200,
+                        valueColor: const AlwaysStoppedAnimation(
+                          Color(0xFF6C3BFF),
+                        ),
+                      ),
+                    )
+                  : Text(
+                      sub,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Color(0xFF6C3BFF),
+                      ),
+                    ),
             ],
           ),
         ),
@@ -200,7 +202,7 @@ class _StatsRow extends StatelessWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// QUICK ACTIONS (OVERFLOW FIXED)
+/// QUICK ACTIONS (🔥 FIXED HERE 🔥)
 ////////////////////////////////////////////////////////////////////////////////
 
 class _QuickActionsRow extends StatelessWidget {
@@ -217,7 +219,10 @@ class _QuickActionsRow extends StatelessWidget {
           Icons.business,
           const [Color(0xFF6C3BFF), Color(0xFF8E6CFF)],
           onTap: () {
-            Navigator.pushNamed(context, '/hostel-management');
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const HostelManagementScreen()),
+            );
           },
         ),
         _Action('Add Resident', Icons.person_add, const [
@@ -284,7 +289,7 @@ class _Action extends StatelessWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// MAIN GRID (UNCHANGED)
+/// REMAINING CODE (UNCHANGED)
 ////////////////////////////////////////////////////////////////////////////////
 
 class _MainGrid extends StatelessWidget {
@@ -332,10 +337,6 @@ class UpcomingDues extends StatelessWidget {
     );
   }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// HOVER & DECORATION (UNCHANGED)
-////////////////////////////////////////////////////////////////////////////////
 
 class HoverLift extends StatefulWidget {
   final Widget child;

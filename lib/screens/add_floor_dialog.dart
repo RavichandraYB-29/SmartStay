@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AddFloorDialog extends StatefulWidget {
-  /// ✅ REQUIRED TO FIX hostelId ERROR
   final String hostelId;
 
   const AddFloorDialog({super.key, required this.hostelId});
@@ -12,6 +12,11 @@ class AddFloorDialog extends StatefulWidget {
 }
 
 class _AddFloorDialogState extends State<AddFloorDialog> {
+  final TextEditingController _floorNumberController = TextEditingController();
+  final TextEditingController _floorNameController = TextEditingController();
+
+  bool _isLoading = false;
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -92,28 +97,29 @@ class _AddFloorDialogState extends State<AddFloorDialog> {
         children: [
           _label('Floor Number *'),
           const SizedBox(height: 6),
-          _inputField(hint: 'e.g., 1', keyboardType: TextInputType.number),
-
+          _inputField(
+            controller: _floorNumberController,
+            hint: 'e.g., 1',
+            keyboardType: TextInputType.number,
+          ),
           const SizedBox(height: 18),
-
           _label('Floor Name *'),
           const SizedBox(height: 6),
-          _inputField(hint: 'e.g., Ground Floor'),
-
+          _inputField(
+            controller: _floorNameController,
+            hint: 'e.g., Ground Floor',
+          ),
           const SizedBox(height: 14),
-
           const Text(
             'You’ll be able to add rooms and configure sharing options for this floor in the next step',
             style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
           ),
-
           const SizedBox(height: 22),
-
           Row(
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: _isLoading ? null : () => Navigator.pop(context),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     shape: RoundedRectangleBorder(
@@ -130,10 +136,7 @@ class _AddFloorDialogState extends State<AddFloorDialog> {
               const SizedBox(width: 14),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {
-                    // 🔥 Firestore integration later using widget.hostelId
-                    Navigator.pop(context);
-                  },
+                  onPressed: _isLoading ? null : _addFloor,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF009688),
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -141,13 +144,22 @@ class _AddFloorDialogState extends State<AddFloorDialog> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Add Floor',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          height: 18,
+                          width: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text(
+                          'Add Floor',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                 ),
               ),
             ],
@@ -155,6 +167,40 @@ class _AddFloorDialogState extends State<AddFloorDialog> {
         ],
       ),
     );
+  }
+
+  // ───────────────── FIRESTORE LOGIC ─────────────────
+  Future<void> _addFloor() async {
+    if (_floorNameController.text.trim().isEmpty) return;
+
+    setState(() => _isLoading = true);
+
+    final hostelRef = FirebaseFirestore.instance
+        .collection('hostels')
+        .doc(widget.hostelId);
+
+    await FirebaseFirestore.instance.runTransaction((transaction) async {
+      final hostelSnap = await transaction.get(hostelRef);
+
+      final currentFloors = hostelSnap['floors'] ?? 0;
+      final newFloorIndex = currentFloors;
+
+      final floorRef = hostelRef.collection('floors').doc();
+
+      transaction.set(floorRef, {
+        'floorIndex': newFloorIndex,
+        'floorName': _floorNameController.text.trim(),
+        'totalRooms': 0,
+        'occupiedRooms': 0,
+        'totalBeds': 0,
+        'occupiedBeds': 0,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      transaction.update(hostelRef, {'floors': currentFloors + 1});
+    });
+
+    if (mounted) Navigator.pop(context);
   }
 
   // ───────────────── HELPERS ─────────────────
@@ -167,9 +213,11 @@ class _AddFloorDialogState extends State<AddFloorDialog> {
 
   Widget _inputField({
     required String hint,
+    required TextEditingController controller,
     TextInputType keyboardType = TextInputType.text,
   }) {
     return TextField(
+      controller: controller,
       keyboardType: keyboardType,
       decoration: InputDecoration(
         hintText: hint,

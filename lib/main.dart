@@ -8,7 +8,6 @@ import 'theme.dart';
 import 'screens/login_screen.dart';
 import 'screens/admin_dashboard.dart';
 import 'screens/resident_dashboard.dart';
-import 'screens/hostel_management_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,12 +24,15 @@ class SmartStayApp extends StatelessWidget {
       title: 'SmartStay',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      initialRoute: '/login',
+
+      // ✅ Use home instead of initialRoute
+      home: const LoginScreen(),
+
+      // ✅ Keep only routes that do NOT need parameters
       routes: {
         '/login': (_) => const LoginScreen(),
         '/admin': (_) => const AdminDashboard(),
         '/resident': (_) => const ResidentDashboard(),
-        '/hostel-management': (_) => HostelManagementScreen(),
       },
     );
   }
