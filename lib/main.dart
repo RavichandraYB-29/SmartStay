@@ -5,11 +5,10 @@ import 'firebase_options.dart';
 import 'theme.dart';
 
 // Screens
-import 'screens/splash_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/admin_dashboard.dart';
-import 'screens/my_hostels_screen.dart';
-import 'screens/create_hostel_screen.dart';
+import 'screens/resident_dashboard.dart';
+import 'screens/hostel_management_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,18 +22,15 @@ class SmartStayApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'SmartStay',
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-
-      /// 🔹 Start with Splash Screen
-      initialRoute: '/',
+      initialRoute: '/login',
       routes: {
-        '/': (context) => const SplashScreen(),
-        '/login': (context) => const LoginScreen(),
-        '/admin-dashboard': (context) => const AdminDashboard(),
-        '/my-hostels': (context) => const MyHostelsScreen(),
-        '/create-hostel': (context) => const CreateHostelScreen(),
+        '/login': (_) => const LoginScreen(),
+        '/admin': (_) => const AdminDashboard(),
+        '/resident': (_) => const ResidentDashboard(),
+        '/hostel-management': (_) => HostelManagementScreen(),
       },
     );
   }

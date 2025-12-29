@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class CustomTextField extends StatefulWidget {
   final TextEditingController controller;
   final String label;
-  final String hintText;
+  final String? hintText; // ✅ OPTIONAL
   final bool isPassword;
   final TextInputType keyboardType;
 
@@ -11,7 +11,7 @@ class CustomTextField extends StatefulWidget {
     super.key,
     required this.controller,
     required this.label,
-    required this.hintText,
+    this.hintText, // ✅ optional
     this.isPassword = false,
     this.keyboardType = TextInputType.text,
   });
@@ -39,7 +39,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
         ),
         const SizedBox(height: 6),
 
-        /// INPUT
+        /// INPUT FIELD
         TextField(
           controller: widget.controller,
           obscureText: widget.isPassword ? _obscure : false,
@@ -74,7 +74,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
               borderSide: BorderSide.none,
             ),
 
-            /// FOCUSED BORDER (PURPLE)
+            /// FOCUSED BORDER (BRAND COLOR)
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: const BorderSide(
