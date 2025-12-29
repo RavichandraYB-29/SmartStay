@@ -56,19 +56,31 @@ class HostelManagementScreen extends StatelessWidget {
                   );
                 }
 
-                return Wrap(
-                  spacing: 24,
-                  runSpacing: 24,
-                  children: snapshot.data!.docs.map((doc) {
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 24,
+                    mainAxisSpacing: 24,
+                    childAspectRatio: 1.35,
+                  ),
+                  itemCount: snapshot.data!.docs.length,
+                  itemBuilder: (context, i) {
+                    final doc = snapshot.data!.docs[i];
                     final data = doc.data() as Map<String, dynamic>;
 
                     return _HostelCard(
-                      hostelId: doc.id, // ✅ CORRECT
+                      hostelId: doc.id,
                       name: data['name'] ?? '',
                       address: data['address'] ?? '',
                       floors: data['floors'] ?? 0,
+                      totalRooms: data['totalRooms'] ?? 0,
+                      occupiedRooms: data['occupiedRooms'] ?? 0,
+                      totalBeds: data['totalBeds'] ?? 0,
+                      occupiedBeds: data['occupiedBeds'] ?? 0,
                     );
-                  }).toList(),
+                  },
                 );
               },
             ),
@@ -160,7 +172,7 @@ class _Header extends StatelessWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// METRICS
+/// METRICS ROW
 ////////////////////////////////////////////////////////////////////////////////
 
 class _MetricsRow extends StatelessWidget {
@@ -175,14 +187,22 @@ class _MetricsRow extends StatelessWidget {
           .where('ownerId', isEqualTo: ownerId)
           .snapshots(),
       builder: (context, snapshot) {
-        final total = snapshot.data?.docs.length ?? 0;
+        final hostels = snapshot.data?.docs ?? [];
+
+        int floors = 0, rooms = 0, beds = 0;
+        for (var d in hostels) {
+          final m = d.data() as Map<String, dynamic>;
+          floors += (m['floors'] ?? 0) as int;
+          rooms += (m['totalRooms'] ?? 0) as int;
+          beds += (m['totalBeds'] ?? 0) as int;
+        }
 
         return Row(
           children: [
-            _MetricCard('Total Hostels', '$total'),
-            _MetricCard('Total Floors', '0'),
-            _MetricCard('Total Rooms', '0'),
-            _MetricCard('Total Beds', '0'),
+            _MetricCard('Total Hostels', hostels.length.toString()),
+            _MetricCard('Total Floors', floors.toString()),
+            _MetricCard('Total Rooms', rooms.toString()),
+            _MetricCard('Total Beds', beds.toString()),
           ],
         );
       },
@@ -191,7 +211,7 @@ class _MetricsRow extends StatelessWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// HOSTEL CARD
+/// HOSTEL CARD (FIGMA EXACT)
 ////////////////////////////////////////////////////////////////////////////////
 
 class _HostelCard extends StatelessWidget {
@@ -199,18 +219,25 @@ class _HostelCard extends StatelessWidget {
   final String name;
   final String address;
   final int floors;
+  final int totalRooms;
+  final int occupiedRooms;
+  final int totalBeds;
+  final int occupiedBeds;
 
   const _HostelCard({
     required this.hostelId,
     required this.name,
     required this.address,
     required this.floors,
+    required this.totalRooms,
+    required this.occupiedRooms,
+    required this.totalBeds,
+    required this.occupiedBeds,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 520,
       decoration: AppDecorations.hostelCard,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -259,7 +286,21 @@ class _HostelCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 22),
+                const SizedBox(height: 18),
+
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    _miniStat('Floors', floors.toString()),
+                    _miniStat('Total Rooms', totalRooms.toString()),
+                    _miniStat('Occupied Rooms', '$occupiedRooms/$totalRooms'),
+                    _miniStat('Occupied Beds', '$occupiedBeds/$totalBeds'),
+                  ],
+                ),
+
+                const SizedBox(height: 20),
+
                 Row(
                   children: [
                     Expanded(
@@ -279,6 +320,25 @@ class _HostelCard extends StatelessWidget {
                         label: const Text('Manage Floors & Rooms'),
                       ),
                     ),
+                    const SizedBox(width: 12),
+                    _iconAction(
+                      icon: Icons.edit,
+                      color: const Color(0xFF6C3BFF),
+                      onTap: () {
+                        // TODO: Edit Hostel Dialog
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    _iconAction(
+                      icon: Icons.delete,
+                      color: Colors.red,
+                      onTap: () async {
+                        await FirebaseFirestore.instance
+                            .collection('hostels')
+                            .doc(hostelId)
+                            .delete();
+                      },
+                    ),
                   ],
                 ),
               ],
@@ -288,10 +348,52 @@ class _HostelCard extends StatelessWidget {
       ),
     );
   }
+
+  Widget _miniStat(String t, String v) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      width: 150,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F6FF),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(t, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          const SizedBox(height: 6),
+          Text(
+            v,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconAction({
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(10),
+      onTap: onTap,
+      child: Container(
+        width: 42,
+        height: 42,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.4)),
+        ),
+        child: Icon(icon, size: 18, color: color),
+      ),
+    );
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// SMALL WIDGETS + DESIGN SYSTEM (UNCHANGED)
+/// SMALL UI
 ////////////////////////////////////////////////////////////////////////////////
 
 class _MetricCard extends StatelessWidget {
@@ -354,6 +456,10 @@ class _SectionTitle extends StatelessWidget {
     );
   }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// DESIGN SYSTEM
+////////////////////////////////////////////////////////////////////////////////
 
 class AppColors {
   static const bg = Color(0xFFF6F7FB);

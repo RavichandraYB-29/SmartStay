@@ -27,7 +27,7 @@ class AdminDashboard extends StatelessWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// TOP HEADER
+/// TOP HEADER (UNCHANGED)
 ////////////////////////////////////////////////////////////////////////////////
 
 class _TopHeader extends StatelessWidget {
@@ -90,7 +90,7 @@ class _TopHeader extends StatelessWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// STATS ROW
+/// STATS ROW (OVERFLOW FIXED)
 ////////////////////////////////////////////////////////////////////////////////
 
 class _StatsRow extends StatelessWidget {
@@ -100,12 +100,21 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (_, c) {
-        final w = (c.maxWidth - 48) / 4;
-        return Row(
+        final cardWidth = (c.maxWidth - 48) / 4;
+
+        return Wrap(
+          spacing: 16,
+          runSpacing: 16,
           children: [
-            _stat(w, 'Total Residents', '124', Icons.people, '+12 this month'),
             _stat(
-              w,
+              cardWidth,
+              'Total Residents',
+              '124',
+              Icons.people,
+              '+12 this month',
+            ),
+            _stat(
+              cardWidth,
               'Available Beds',
               '18',
               Icons.bed,
@@ -113,14 +122,14 @@ class _StatsRow extends StatelessWidget {
               showBar: true,
             ),
             _stat(
-              w,
+              cardWidth,
               'Pending Fees',
               '₹45,000',
               Icons.currency_rupee,
               '8 residents',
             ),
             _stat(
-              w,
+              cardWidth,
               'Open Complaints',
               '5',
               Icons.notifications_active,
@@ -140,43 +149,50 @@ class _StatsRow extends StatelessWidget {
     String sub, {
     bool showBar = false,
   }) {
-    return HoverLift(
-      child: Container(
-        width: w,
-        margin: const EdgeInsets.only(right: 16),
-        padding: const EdgeInsets.all(20),
-        decoration: _card(),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(
-              alignment: Alignment.topRight,
-              child: Icon(icon, color: const Color(0xFF6C3BFF)),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 6),
-            Text(title, style: const TextStyle(color: Colors.grey)),
-            const SizedBox(height: 8),
-            if (showBar)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: LinearProgressIndicator(
-                  value: 0.88,
-                  minHeight: 6,
-                  backgroundColor: Colors.grey.shade200,
-                  valueColor: const AlwaysStoppedAnimation(Color(0xFF6C3BFF)),
-                ),
-              )
-            else
-              Text(
-                sub,
-                style: const TextStyle(fontSize: 12, color: Color(0xFF6C3BFF)),
+    return SizedBox(
+      width: w,
+      child: HoverLift(
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: _card(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Align(
+                alignment: Alignment.topRight,
+                child: Icon(icon, color: const Color(0xFF6C3BFF)),
               ),
-          ],
+              const SizedBox(height: 12),
+              Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(title, style: const TextStyle(color: Colors.grey)),
+              const SizedBox(height: 8),
+              if (showBar)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: LinearProgressIndicator(
+                    value: 0.88,
+                    minHeight: 6,
+                    backgroundColor: Colors.grey.shade200,
+                    valueColor: const AlwaysStoppedAnimation(Color(0xFF6C3BFF)),
+                  ),
+                )
+              else
+                Text(
+                  sub,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color(0xFF6C3BFF),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -184,7 +200,7 @@ class _StatsRow extends StatelessWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// QUICK ACTIONS (NAVIGATION FIXED)
+/// QUICK ACTIONS (OVERFLOW FIXED)
 ////////////////////////////////////////////////////////////////////////////////
 
 class _QuickActionsRow extends StatelessWidget {
@@ -192,7 +208,9 @@ class _QuickActionsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Wrap(
+      spacing: 16,
+      runSpacing: 16,
       children: [
         _Action(
           'Manage Hostels',
@@ -229,14 +247,14 @@ class _Action extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
+    return SizedBox(
+      width: 260,
       child: HoverLift(
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(16),
           child: Container(
             height: 56,
-            margin: const EdgeInsets.only(right: 16),
             decoration: BoxDecoration(
               gradient: LinearGradient(colors: g),
               borderRadius: BorderRadius.circular(16),
@@ -266,7 +284,7 @@ class _Action extends StatelessWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// MAIN GRID
+/// MAIN GRID (UNCHANGED)
 ////////////////////////////////////////////////////////////////////////////////
 
 class _MainGrid extends StatelessWidget {
@@ -316,7 +334,7 @@ class UpcomingDues extends StatelessWidget {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// HOVER
+/// HOVER & DECORATION (UNCHANGED)
 ////////////////////////////////////////////////////////////////////////////////
 
 class HoverLift extends StatefulWidget {
